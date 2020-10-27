@@ -1,10 +1,4 @@
-import tkinter
-
 # 1マス 30x30
-root = tkinter.Tk()
-root.title(u"test")
-root.geometry("800x800")
-canvas = tkinter.Canvas(root, width=800, height=800)
 MINO_T = 0   #1 
 MINO_I = 1   #2 
 MINO_O = 2   #3 
@@ -25,15 +19,14 @@ FIELD_WIDTH = 10
 
 class Field:
 
-    def __init__(self, xo, fmino):
+    def __init__(self, xo, fmino, tetcanvas):
         self.xoffset = xo
         self.mino = fmino
         self.score = 0
         self.dipfield = []
         self.ctlmlist = []
-        scorestr = "Score : " + str(self.score)
-        self.textscore = tkinter.Label(text=scorestr)
-        self.textscore.place(x=5, y=5)
+        self.canvas = tetcanvas
+
         for y in range(FIELD_HEIGHT+1):
             buf=[]
             for x in range(FIELD_WIDTH+2):
@@ -46,14 +39,14 @@ class Field:
             self.dipfield.append(buf)
     
     def refresh(self):
-        canvas.delete("all")
-        canvas.create_rectangle(0, 0, 800, 800, fill='black')
+        self.canvas.delete("all")
+        self.canvas.create_rectangle(0, 0, 800, 800, fill='black')
         fx = self.xoffset
         fy = 100
         ex = 411
         ey = 100
         for y in range(21):
-            canvas.create_line(fx, fy, ex, ey, fill='white')
+            self.canvas.create_line(fx, fy, ex, ey, fill='white')
             fy+=31
             ey+=31
 
@@ -62,17 +55,19 @@ class Field:
         ex = self.xoffset
         ey = 721
         for x in range(11):
-            canvas.create_line(fx, fy, ex, ey, fill='white')
+            self.canvas.create_line(fx, fy, ex, ey, fill='white')
             fx+=31
             ex+=31
-        canvas.place(x=0,y=0)
+        self.canvas.place(x=0,y=0)
         
         
 
-    def update(self):
+    def update(self, mlist, scoretxt):
+        self.ctlmlist = mlist 
         self.mino.move(self.ctlmlist, self.dipfield)
         if self.mino.drop(self.dipfield):
             self.checkline()
+            scoretxt.set("Score : " + str(self.score))
         self.mino.update(self.dipfield)
         
     
@@ -82,19 +77,19 @@ class Field:
             fx = 101
             for x in range(10):
                 if self.dipfield[y][x+1]==1:
-                    canvas.create_rectangle(fx, fy, fx+29, fy+29, fill='purple')
+                    self.canvas.create_rectangle(fx, fy, fx+29, fy+29, fill='purple')
                 elif self.dipfield[y][x+1]==2:
-                    canvas.create_rectangle(fx, fy, fx+29, fy+29, fill='deep sky blue')
+                    self.canvas.create_rectangle(fx, fy, fx+29, fy+29, fill='deep sky blue')
                 elif self.dipfield[y][x+1]==3:
-                    canvas.create_rectangle(fx, fy, fx+29, fy+29, fill='gold')
+                    self.canvas.create_rectangle(fx, fy, fx+29, fy+29, fill='gold')
                 elif self.dipfield[y][x+1]==4:
-                    canvas.create_rectangle(fx, fy, fx+29, fy+29, fill='orange2')
+                    self.canvas.create_rectangle(fx, fy, fx+29, fy+29, fill='orange2')
                 elif self.dipfield[y][x+1]==5:
-                    canvas.create_rectangle(fx, fy, fx+29, fy+29, fill='blue')
+                    self.canvas.create_rectangle(fx, fy, fx+29, fy+29, fill='blue')
                 elif self.dipfield[y][x+1]==6:
-                    canvas.create_rectangle(fx, fy, fx+29, fy+29, fill='yellow green')
+                    self.canvas.create_rectangle(fx, fy, fx+29, fy+29, fill='yellow green')
                 elif self.dipfield[y][x+1]==7:
-                    canvas.create_rectangle(fx, fy, fx+29, fy+29, fill='red')
+                    self.canvas.create_rectangle(fx, fy, fx+29, fy+29, fill='red')
                 fx+=31
             fy+=31
     
@@ -112,8 +107,7 @@ class Field:
             else:
                 y+=1
                 wcount = 0
-            
-        self.calcScore(scorecount)
+        self.calcscore(scorecount)
 
     def deleteline(self, y):
         for x in range(1,FIELD_WIDTH+1):
@@ -127,15 +121,9 @@ class Field:
                     self.dipfield[y][x] = 0
                 else:
                     self.dipfield[y][x] = self.dipfield[y-1][x]
-
-    def calcScore(self, dline):
-        self.textscore.pack_forget()
-        self.textscore.destroy()
-        self.score += dline*dline*100
-        scorestr = "Score : " + str(self.score)
-        self.textscore = tkinter.Label(text=scorestr)
-        self.textscore.place(x=5, y=5)
-
+    
+    def calcscore(self, y):
+        self.score += y*y*100
                 
 class Mino:
 
@@ -492,41 +480,3 @@ class Mino:
                     self.mx -=1
 
             mlist.pop(0)
-
-
-def gameloop(field):
-    field.refresh()
-    field.update()
-    field.draw()
-    root.after(20, gameloop)
-
-
-
-def keyevent(event):
-    # 入力されたキーを取得
-    key = event.keysym
-
-    # 入力されたキーに応じてラベルを変更
-    if key == "Left":
-        field.ctlmlist.append('l')
-    elif key == "Right":
-        field.ctlmlist.append('r')
-    elif key == "Down":
-        field.ctlmlist.append('d')
-    elif key == "Up":
-        field.ctlmlist.append('u')
-    elif key == "s":
-        field.ctlmlist.append('s')
-    elif key == "a":
-        field.ctlmlist.append('a')
-
-
-field = Field(xo=100,  fmino=Mino())
-root.bind("<Key>", keyevent)
-
-def main():
-    gameloop(field)
-    root.mainloop()
-
-if __name__=="__main__":
-    main()
