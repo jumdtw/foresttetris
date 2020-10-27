@@ -5,7 +5,6 @@ root = tkinter.Tk()
 root.title(u"test")
 root.geometry("800x800")
 canvas = tkinter.Canvas(root, width=800, height=800)
-dipfield = []
 MINO_T = 0   #1 
 MINO_I = 1   #2 
 MINO_O = 2   #3 
@@ -20,16 +19,33 @@ MINO_180 = 2
 MINO_270 = 3
 MINO_ALL_ANGLE = 4
 MINO_HEIGHT_WIDTH = 4
-
+FIELD_HEIGHT = 20
+FIELD_WIDTH = 10
 
 
 class Field:
 
-    def __init__(self, xo):
+    def __init__(self, xo, fmino):
         self.xoffset = xo
+        self.mino = fmino
+        self.score = 0
+        self.dipfield = []
+        self.ctlmlist = []
+        scorestr = "Score : " + str(self.score)
+        self.textscore = tkinter.Label(text=scorestr)
+        self.textscore.place(x=5, y=5)
+        for y in range(FIELD_HEIGHT+1):
+            buf=[]
+            for x in range(FIELD_WIDTH+2):
+                if y==20:
+                    buf.append(1)                
+                elif x==0 or x==11:
+                    buf.append(1)
+                else:
+                    buf.append(0)
+            self.dipfield.append(buf)
     
     def refresh(self):
-                    
         canvas.delete("all")
         canvas.create_rectangle(0, 0, 800, 800, fill='black')
         fx = self.xoffset
@@ -49,34 +65,78 @@ class Field:
             canvas.create_line(fx, fy, ex, ey, fill='white')
             fx+=31
             ex+=31
-
-                
         canvas.place(x=0,y=0)
+        
+        
 
+    def update(self):
+        self.mino.move(self.ctlmlist, self.dipfield)
+        if self.mino.drop(self.dipfield):
+            self.checkline()
+        self.mino.update(self.dipfield)
+        
     
     def draw(self):
         fy = 101
         for y in range(20):
             fx = 101
             for x in range(10):
-                if dipfield[y][x+1]==1:
+                if self.dipfield[y][x+1]==1:
                     canvas.create_rectangle(fx, fy, fx+29, fy+29, fill='purple')
-                elif dipfield[y][x+1]==2:
+                elif self.dipfield[y][x+1]==2:
                     canvas.create_rectangle(fx, fy, fx+29, fy+29, fill='deep sky blue')
-                elif dipfield[y][x+1]==3:
+                elif self.dipfield[y][x+1]==3:
                     canvas.create_rectangle(fx, fy, fx+29, fy+29, fill='gold')
-                elif dipfield[y][x+1]==4:
+                elif self.dipfield[y][x+1]==4:
                     canvas.create_rectangle(fx, fy, fx+29, fy+29, fill='orange2')
-                elif dipfield[y][x+1]==5:
+                elif self.dipfield[y][x+1]==5:
                     canvas.create_rectangle(fx, fy, fx+29, fy+29, fill='blue')
-                elif dipfield[y][x+1]==6:
+                elif self.dipfield[y][x+1]==6:
                     canvas.create_rectangle(fx, fy, fx+29, fy+29, fill='yellow green')
-                elif dipfield[y][x+1]==7:
+                elif self.dipfield[y][x+1]==7:
                     canvas.create_rectangle(fx, fy, fx+29, fy+29, fill='red')
                 fx+=31
             fy+=31
+    
+    def checkline(self):
+        wcount = 0
+        scorecount = 0
+        y = 0
+        while y < FIELD_HEIGHT:
+            for x in range(1,FIELD_WIDTH+1):
+                if self.dipfield[y][x]>=1:
+                    wcount+=1
+            if wcount==10:
+                self.deleteline(y)
+                scorecount += 1
+            else:
+                y+=1
+                wcount = 0
+            
+        self.calcScore(scorecount)
 
+    def deleteline(self, y):
+        for x in range(1,FIELD_WIDTH+1):
+            self.dipfield[y][x] = 0
+        self.castline(y)
 
+    def castline(self, uy):
+        for y in range(uy,0,-1):
+            for x in range(1,FIELD_WIDTH+1):
+                if y==0:
+                    self.dipfield[y][x] = 0
+                else:
+                    self.dipfield[y][x] = self.dipfield[y-1][x]
+
+    def calcScore(self, dline):
+        self.textscore.pack_forget()
+        self.textscore.destroy()
+        self.score += dline*dline*100
+        scorestr = "Score : " + str(self.score)
+        self.textscore = tkinter.Label(text=scorestr)
+        self.textscore.place(x=5, y=5)
+
+                
 class Mino:
 
     #[MINO_NUM][MINO_ALL_ANGLE][MINO_HEIGHT_WIDTH][MINO_HEIGHT_WIDTH]
@@ -338,44 +398,41 @@ class Mino:
         self.droptimer = 0
         self.positimer = 0
 
-    def hitcheck(self,fmy,fmx,fminotype,fminoangle):
+    def hitcheck(self, field, fmy,fmx,fminotype,fminoangle):
         for y in range(4):
             for x in range(4):
-                if fmx+x <=11:
-                    if dipfield[fmy+y][fmx+x] and self.minodate[fminotype][fminoangle][y][x]:
+                if fmx+x >=0 and fmx+x <=11:
+                    if field[fmy+y][fmx+x] > 0 and self.minodate[fminotype][fminoangle][y][x] > 0:
                         return False
         return True
 
-    def draw(self):
+    def update(self, field):
         self.dmx = self.mx
         self.dmy = self.my
         for y in range(4):
             for x in range(4):
                 if self.mx+x <=11:
-                    dipfield[self.my+y][self.mx+x] = dipfield[self.my+y][self.mx+x] or self.minodate[self.minotype][self.minoangle][y][x]
+                    field[self.my+y][self.mx+x] = field[self.my+y][self.mx+x] or self.minodate[self.minotype][self.minoangle][y][x]
 
-    def fieldupdate(self):
-        for y in range(4):
-            for x in range(4):
-                if self.mx+x <=11:
-                    dipfield[self.my+y][self.mx+x] = dipfield[self.my+y][self.mx+x] or self.minodate[self.minotype][self.minoangle][y][x]
-
-    def delete(self):
+    def delete(self, field):
         for y in range(4):
             for x in range(4):
                 if self.minodate[self.minotype][self.minoangle][y][x] > 0:
-                    dipfield[self.dmy+y][self.dmx+x] = 0
+                    field[self.dmy+y][self.dmx+x] = 0
 
-    def drop(self):
-        self.droptimer += 50
-        if self.droptimer >= 800:
-            if self.hitcheck(self.my+1, self.mx, self.minotype, self.minoangle):
+    def drop(self, field):
+        flag = False
+        self.droptimer += 20
+        #self.delete(field)
+        if self.droptimer >= 500:
+            if self.hitcheck(field, self.my+1, self.mx, self.minotype, self.minoangle):
                 self.my += 1
             else:
                 self.positimer += 50
                 if self.positimer >= 150:
+                    flag = True
                     self.positimer = 0
-                    self.fieldupdate()
+                    self.update(field)
                     self.my = 0
                     self.mx = 5
                     self.minoangle += 1
@@ -386,21 +443,24 @@ class Mino:
                         self.minotype = 0
                     self.droptimer = 0
             self.droptimer = 0
-            
-    def move(self,mlist):
-        while len(mlist)!=0:
+        return flag
+
+    def move(self,mlist,field):
+        self.delete(field)
+        if len(mlist)!=0:
             if mlist[0] == "l":
-                if self.hitcheck(self.my, self.mx-1, self.minotype, self.minoangle):
+                if self.hitcheck(field, self.my, self.mx-1, self.minotype, self.minoangle):
                     self.mx -= 1
             elif mlist[0] == "r":
-                if self.hitcheck(self.my, self.mx+1, self.minotype, self.minoangle):
+                if self.hitcheck(field, self.my, self.mx+1, self.minotype, self.minoangle):
                     self.mx += 1
             elif mlist[0] == "d":
-                if self.hitcheck(self.my+1, self.mx, self.minotype, self.minoangle):
+                if self.hitcheck(field, self.my+1, self.mx, self.minotype, self.minoangle):
                     self.my += 1
             elif mlist[0] == "u":
                 self.positimer += 100
-                while self.hitcheck(self.my+1, self.mx, self.minotype, self.minoangle):
+                self.droptimer += 500
+                while self.hitcheck(field, self.my+1, self.mx, self.minotype, self.minoangle):
                     self.my += 1
             elif mlist[0] == "s":
                 buf = self.minoangle
@@ -408,39 +468,39 @@ class Mino:
                     buf = 0
                 else:
                     buf += 1
-                if self.hitcheck(self.my, self.mx, self.minotype, buf):
+                if self.hitcheck(field, self.my, self.mx, self.minotype, buf):
                     self.minoangle = buf
+                elif self.hitcheck(field, self.my, self.mx+1, self.minotype, buf):
+                    self.minoangle = buf
+                    self.mx +=1
+                elif self.hitcheck(field, self.my, self.mx-1, self.minotype, buf):
+                    self.minoangle = buf
+                    self.mx -=1
             elif mlist[0] == "a":
                 buf = self.minoangle
                 if self.minoangle == 0:
                     buf = 3
                 else:
                     buf -= 1
-                if self.hitcheck(self.my, self.mx, self.minotype, buf):
+                if self.hitcheck(field, self.my, self.mx, self.minotype, buf):
                     self.minoangle = buf
+                elif self.hitcheck(field, self.my, self.mx+1, self.minotype, buf):
+                    self.minoangle = buf
+                    self.mx +=1
+                elif self.hitcheck(field, self.my, self.mx-1, self.minotype, buf):
+                    self.minoangle = buf
+                    self.mx -=1
 
             mlist.pop(0)
 
 
 def gameloop():
     field.refresh()
-    mino.drop()
-    mino.draw()
+    field.update()
     field.draw()
-    mino.delete()
     root.after(20, gameloop)
 
-def dipfieldInit():
-    for y in range(21):
-        buf=[]
-        for x in range(12):
-            if y==20:
-                buf.append(1)                
-            elif x==0 or x==11:
-                buf.append(1)
-            else:
-                buf.append(0)
-        dipfield.append(buf)
+
 
 def keyevent(event):
     # 入力されたキーを取得
@@ -448,25 +508,23 @@ def keyevent(event):
 
     # 入力されたキーに応じてラベルを変更
     if key == "Left":
-        mino.move(['l'])
+        field.ctlmlist.append('l')
     elif key == "Right":
-        mino.move(['r'])
+        field.ctlmlist.append('r')
     elif key == "Down":
-        mino.move(['d'])
+        field.ctlmlist.append('d')
     elif key == "Up":
-        mino.move(['u'])
+        field.ctlmlist.append('u')
     elif key == "s":
-        mino.move(['s'])
+        field.ctlmlist.append('s')
     elif key == "a":
-        mino.move(['a'])
+        field.ctlmlist.append('a')
 
 
-field = Field(xo=100)
-mino = Mino()
+field = Field(xo=100,  fmino=Mino())
 root.bind("<Key>", keyevent)
 
 def main():
-    dipfieldInit()
     gameloop()
     root.mainloop()
 
