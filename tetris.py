@@ -1,3 +1,6 @@
+import copy
+import random
+
 # 1マス 30x30
 MINO_T = 0   #1 
 MINO_I = 1   #2 
@@ -19,8 +22,7 @@ FIELD_WIDTH = 10
 
 class Field:
 
-    def __init__(self, xo, fmino, tetcanvas):
-        self.xoffset = xo
+    def __init__(self, fmino, tetcanvas):
         self.mino = fmino
         self.score = 0
         self.dipfield = []
@@ -41,23 +43,48 @@ class Field:
     def refresh(self):
         self.canvas.delete("all")
         self.canvas.create_rectangle(0, 0, 800, 800, fill='black')
-        fx = self.xoffset
+        fx = 100
         fy = 100
-        ex = 411
+        ex = 411 #100 + 31*10 + 1
         ey = 100
         for y in range(21):
             self.canvas.create_line(fx, fy, ex, ey, fill='white')
             fy+=31
             ey+=31
 
-        fx = self.xoffset
+        fx = 100
         fy = 100
-        ex = self.xoffset
+        ex = 100
         ey = 721
         for x in range(11):
             self.canvas.create_line(fx, fy, ex, ey, fill='white')
             fx+=31
             ex+=31
+
+        fx = 500
+        fy = 100
+        ex = 624
+        ey = 100
+
+        for q in range(3):
+            fx = 500
+            fy = 100 + 124*q + 31*q
+            ex = 500
+            ey = 224 + 124*q + 31*q
+            for y in range(5):
+                self.canvas.create_line(fx, fy, ex, ey, fill='white')
+                fx += 31
+                ex += 31
+
+            fx = 500
+            fy = 100 + 124*q + 31*q
+            ex = 624
+            ey = 100 + 124*q + 31*q
+            for x in range(5):
+                self.canvas.create_line(fx, fy, ex, ey, fill='white')
+                fy += 31
+                ey += 31
+
         self.canvas.place(x=0,y=0)
         
         
@@ -92,6 +119,31 @@ class Field:
                     self.canvas.create_rectangle(fx, fy, fx+29, fy+29, fill='red')
                 fx+=31
             fy+=31
+
+        for q in range(3):
+            fy = 101 + 124*q + 31*q 
+            for y in range(4):
+                fx = 501
+                for x in range(4):    
+                    # q+1でつねにnext minoを表示する
+                    # angleは固定したいので、常に0
+                    # dipfieldとは違いxにプラス１はしない。dipfieldは1~10でやりたいからやってる。
+                    if self.mino.minodate[self.mino.minotype[q+1]][0][y][x]==1:
+                        self.canvas.create_rectangle(fx, fy, fx+29, fy+29, fill='purple')
+                    elif self.mino.minodate[self.mino.minotype[q+1]][0][y][x]==2:
+                        self.canvas.create_rectangle(fx, fy, fx+29, fy+29, fill='deep sky blue')
+                    elif self.mino.minodate[self.mino.minotype[q+1]][0][y][x]==3:
+                        self.canvas.create_rectangle(fx, fy, fx+29, fy+29, fill='gold')
+                    elif self.mino.minodate[self.mino.minotype[q+1]][0][y][x]==4:
+                        self.canvas.create_rectangle(fx, fy, fx+29, fy+29, fill='orange2')
+                    elif self.mino.minodate[self.mino.minotype[q+1]][0][y][x]==5:
+                        self.canvas.create_rectangle(fx, fy, fx+29, fy+29, fill='blue')
+                    elif self.mino.minodate[self.mino.minotype[q+1]][0][y][x]==6:
+                        self.canvas.create_rectangle(fx, fy, fx+29, fy+29, fill='yellow green')
+                    elif self.mino.minodate[self.mino.minotype[q+1]][0][y][x]==7:
+                        self.canvas.create_rectangle(fx, fy, fx+29, fy+29, fill='red')
+                    fx+=31
+                fy+=31
     
     def checkline(self):
         wcount = 0
@@ -132,34 +184,34 @@ class Mino:
         [
             [
                 #t mino 0
-                [0,0,0,0],
                 [0,1,0,0],
                 [1,1,1,0],
+                [0,0,0,0],
                 [0,0,0,0],    
             ],
             
             [
                 #t mino 90
-                [0,0,0,0],
                 [0,1,0,0],
                 [0,1,1,0],
-                [0,1,0,0],    
+                [0,1,0,0],
+                [0,0,0,0],    
             ],
             
             [
                 #t mino 180
                 [0,0,0,0],
-                [0,0,0,0],
                 [1,1,1,0],
-                [0,1,0,0],    
+                [0,1,0,0],
+                [0,0,0,0],    
             ],
             
             [
                 #t mino 270
-                [0,0,0,0],
                 [0,1,0,0],
                 [1,1,0,0],
-                [0,1,0,0],    
+                [0,1,0,0],
+                [0,0,0,0],    
             ],
             
         ],
@@ -167,34 +219,34 @@ class Mino:
         [
             [
                 #I mino 0
-                [0,2,0,0],
-                [0,2,0,0],
-                [0,2,0,0],
-                [0,2,0,0],
+                [0,0,0,0],
+                [2,2,2,2],
+                [0,0,0,0],
+                [0,0,0,0],
             ],
             
             [
                 #I mino 90 
-                [0,0,0,0],
-                [0,0,0,0],
-                [2,2,2,2],
-                [0,0,0,0],
+                [0,0,2,0],
+                [0,0,2,0],
+                [0,0,2,0],
+                [0,0,2,0],
             ],
             
             [
                 #I mino 180
-                [0,2,0,0],
-                [0,2,0,0],
-                [0,2,0,0],
-                [0,2,0,0],
-            ],
-            
-            [
-                #I mino 270
                 [0,0,0,0],
                 [0,0,0,0],
                 [2,2,2,2],
                 [0,0,0,0],
+            ],
+            
+            [
+                #I mino 270
+                [0,2,0,0],
+                [0,2,0,0],
+                [0,2,0,0],
+                [0,2,0,0],
             ],
             
         ],
@@ -237,33 +289,33 @@ class Mino:
         [
             [
                 #L mino 0
+                [0,0,4,0],
+                [4,4,4,0],
                 [0,0,0,0],
-                [0,4,0,0],
-                [0,4,0,0],
-                [0,4,4,0],
+                [0,0,0,0],
             ],
             
             [
                 #L mino 90
+                [0,4,0,0],
+                [0,4,0,0],
+                [0,4,4,0],
                 [0,0,0,0],
-                [0,0,0,0],
-                [4,4,4,0],
-                [4,0,0,0],
             ],
             
             [
                 #L mino 180 
                 [0,0,0,0],
-                [4,4,0,0],
-                [0,4,0,0],
-                [0,4,0,0],
+                [4,4,4,0],
+                [4,0,0,0],
+                [0,0,0,0],
             ],
             
             [
                 #L mino 270 
-                [0,0,0,0],
-                [0,0,4,0],
-                [4,4,4,0],
+                [4,4,0,0],
+                [0,4,0,0],
+                [0,4,0,0],
                 [0,0,0,0],
             ],
             
@@ -272,34 +324,34 @@ class Mino:
         [
             [
                 #J mino 0
+                [5,0,0,0],
+                [5,5,5,0],
                 [0,0,0,0],
-                [0,5,0,0],
-                [0,5,0,0],
-                [5,5,0,0],
+                [0,0,0,0],
             ],
             
             [
                 #J mino 90
-                [0,0,0,0],
-                [5,0,0,0],
-                [5,5,5,0],
+                [0,5,5,0],
+                [0,5,0,0],
+                [0,5,0,0],
                 [0,0,0,0],
             ],
             
             [
                 #J mino 180 
                 [0,0,0,0],
-                [0,5,5,0],
-                [0,5,0,0],
-                [0,5,0,0],
+                [5,5,5,0],
+                [0,0,5,0],
+                [0,0,0,0],
             ],
             
             [
                 #J mino 270 
+                [0,5,0,0],
+                [0,5,0,0],
+                [5,5,0,0],
                 [0,0,0,0],
-                [0,0,0,0],
-                [5,5,5,0],
-                [0,0,5,0],
             ],
             
         ],
@@ -307,18 +359,18 @@ class Mino:
         [
             [
                 #S mino 0
-                [0,0,0,0],
                 [0,6,6,0],
                 [6,6,0,0],
+                [0,0,0,0],
                 [0,0,0,0],
             ],
             
             [
                 #S mino 90 
-                [0,0,0,0],
                 [0,6,0,0],
                 [0,6,6,0],
                 [0,0,6,0],
+                [0,0,0,0],
             ],
             
             [
@@ -331,10 +383,10 @@ class Mino:
             
             [
                 #S mino 270
-                [0,0,0,0],
+                [6,0,0,0],
+                [6,6,0,0],
                 [0,6,0,0],
-                [0,6,6,0],
-                [0,0,6,0],
+                [0,0,0,0],
             ],
             
         ],
@@ -342,18 +394,18 @@ class Mino:
         [
             [
                 #Z mino 0
-                [0,0,0,0],
                 [7,7,0,0],
                 [0,7,7,0],
+                [0,0,0,0],
                 [0,0,0,0],
             ],
             
             [
                 #Z mino 90
-                [0,0,0,0],
                 [0,0,7,0],
                 [0,7,7,0],
                 [0,7,0,0],
+                [0,0,0,0],
             ],
             
             [
@@ -366,10 +418,10 @@ class Mino:
             
             [
                 #Z mino 270
-                [0,0,0,0],
-                [0,0,7,0],
-                [0,7,7,0],
                 [0,7,0,0],
+                [7,7,0,0],
+                [7,0,0,0],
+                [0,0,0,0],
             ],
             
         ],
@@ -381,15 +433,20 @@ class Mino:
         self.my = 0
         self.dmx = 0
         self.dmy = 0
-        self.minotype=0
         self.minoangle=0
         self.droptimer = 0
         self.positimer = 0
+        self.minotype = [0,1,2,3,4,5,6]
+        random.shuffle(self.minotype)
+        listbuf = [0,1,2,3,4,5,6]
+        random.shuffle(listbuf)
+        self.minotype.extend(listbuf)
+
 
     def hitcheck(self, field, fmy,fmx,fminotype,fminoangle):
         for y in range(4):
             for x in range(4):
-                if fmx+x >=0 and fmx+x <=11:
+                if fmx+x >=0 and fmx+x <=11 and fmy <= 20:
                     if field[fmy+y][fmx+x] > 0 and self.minodate[fminotype][fminoangle][y][x] > 0:
                         return False
         return True
@@ -400,12 +457,12 @@ class Mino:
         for y in range(4):
             for x in range(4):
                 if self.mx+x <=11:
-                    field[self.my+y][self.mx+x] = field[self.my+y][self.mx+x] or self.minodate[self.minotype][self.minoangle][y][x]
+                    field[self.my+y][self.mx+x] = field[self.my+y][self.mx+x] or self.minodate[self.minotype[0]][self.minoangle][y][x]
 
     def delete(self, field):
         for y in range(4):
             for x in range(4):
-                if self.minodate[self.minotype][self.minoangle][y][x] > 0:
+                if self.minodate[self.minotype[0]][self.minoangle][y][x] > 0:
                     field[self.dmy+y][self.dmx+x] = 0
 
     def drop(self, field):
@@ -413,11 +470,11 @@ class Mino:
         self.droptimer += 20
         #self.delete(field)
         if self.droptimer >= 500:
-            if self.hitcheck(field, self.my+1, self.mx, self.minotype, self.minoangle):
+            if self.hitcheck(field, self.my+1, self.mx, self.minotype[0], self.minoangle):
                 self.my += 1
             else:
                 self.positimer += 50
-                if self.positimer >= 150:
+                if self.positimer >= 100:
                     flag = True
                     self.positimer = 0
                     self.update(field)
@@ -426,29 +483,32 @@ class Mino:
                     self.minoangle += 1
                     if self.minoangle==4:
                         self.minoangle = 0
-                    self.minotype += 1
-                    if self.minotype==7:
-                        self.minotype = 0
+                    self.minotype.pop(0)
+                    if len(self.minotype) <=7:
+                        listbuf = [0,1,2,3,4,5,6]
+                        random.shuffle(listbuf)
+                        self.minotype.extend(listbuf)
                     self.droptimer = 0
             self.droptimer = 0
         return flag
 
+    #https://tetrisch.github.io/main/srs.html
     def move(self,mlist,field):
         self.delete(field)
         if len(mlist)!=0:
             if mlist[0] == "l":
-                if self.hitcheck(field, self.my, self.mx-1, self.minotype, self.minoangle):
+                if self.hitcheck(field, self.my, self.mx-1, self.minotype[0], self.minoangle):
                     self.mx -= 1
             elif mlist[0] == "r":
-                if self.hitcheck(field, self.my, self.mx+1, self.minotype, self.minoangle):
+                if self.hitcheck(field, self.my, self.mx+1, self.minotype[0], self.minoangle):
                     self.mx += 1
             elif mlist[0] == "d":
-                if self.hitcheck(field, self.my+1, self.mx, self.minotype, self.minoangle):
+                if self.hitcheck(field, self.my+1, self.mx, self.minotype[0], self.minoangle):
                     self.my += 1
             elif mlist[0] == "u":
                 self.positimer += 100
                 self.droptimer += 500
-                while self.hitcheck(field, self.my+1, self.mx, self.minotype, self.minoangle):
+                while self.hitcheck(field, self.my+1, self.mx, self.minotype[0], self.minoangle):
                     self.my += 1
             elif mlist[0] == "s":
                 buf = self.minoangle
@@ -456,27 +516,260 @@ class Mino:
                     buf = 0
                 else:
                     buf += 1
-                if self.hitcheck(field, self.my, self.mx, self.minotype, buf):
+
+                if self.hitcheck(field, self.my, self.mx, self.minotype[0], buf):
                     self.minoangle = buf
-                elif self.hitcheck(field, self.my, self.mx+1, self.minotype, buf):
-                    self.minoangle = buf
-                    self.mx +=1
-                elif self.hitcheck(field, self.my, self.mx-1, self.minotype, buf):
-                    self.minoangle = buf
-                    self.mx -=1
+                else:
+                    self.surperRrotation(field, buf)
+
+                
             elif mlist[0] == "a":
                 buf = self.minoangle
                 if self.minoangle == 0:
                     buf = 3
                 else:
                     buf -= 1
-                if self.hitcheck(field, self.my, self.mx, self.minotype, buf):
+
+                if self.hitcheck(field, self.my, self.mx, self.minotype[0], buf):
                     self.minoangle = buf
-                elif self.hitcheck(field, self.my, self.mx+1, self.minotype, buf):
-                    self.minoangle = buf
-                    self.mx +=1
-                elif self.hitcheck(field, self.my, self.mx-1, self.minotype, buf):
-                    self.minoangle = buf
-                    self.mx -=1
+                else:
+                    self.surperLrotation(field, buf)
+
 
             mlist.pop(0)
+
+    def surperRrotation(self, field, buf):
+        # Iミノか否か
+        if self.minotype[0]==1:
+            if self.minoangle==0:
+                if self.hitcheck(field, self.my, self.mx-2, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx -= 2
+                elif self.hitcheck(field, self.my, self.mx+1, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx += 1
+                elif self.hitcheck(field, self.my+1, self.mx-2, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx -= 2
+                    self.my += 1
+                elif self.hitcheck(field, self.my-2, self.mx+1, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx += 1
+                    self.my -= 2
+            elif self.minoangle==1:
+                if self.hitcheck(field, self.my, self.mx-1, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx -= 1
+                elif self.hitcheck(field, self.my, self.mx+2, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx += 2
+                elif self.hitcheck(field, self.my-2, self.mx-1, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx -= 1
+                    self.my -= 2
+                elif self.hitcheck(field, self.my+1, self.mx+2, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx += 2
+                    self.my += 1
+            elif self.minoangle==2:
+                if self.hitcheck(field, self.my, self.mx+2, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx += 2
+                elif self.hitcheck(field, self.my, self.mx-1, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx -= 1
+                elif self.hitcheck(field, self.my-1, self.mx+2, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx += 2
+                    self.my -= 1
+                elif self.hitcheck(field, self.my+2, self.mx-1, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx -= 1
+                    self.my += 2
+            elif self.minoangle==3: 
+                if self.hitcheck(field, self.my, self.mx-2, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx -= 2
+                elif self.hitcheck(field, self.my, self.mx+1, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx += 1
+                elif self.hitcheck(field, self.my+2, self.mx+1, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx += 1
+                    self.my += 2
+                elif self.hitcheck(field, self.my-1, self.mx-2, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx -= 2
+                    self.my -= 1
+        else:
+            if self.minoangle==0:
+                if self.hitcheck(field, self.my, self.mx-1, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx -= 1
+                elif self.hitcheck(field, self.my-1, self.mx-1, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx -= 1
+                    self.my -= 1
+                elif self.hitcheck(field, self.my+2, self.mx-1, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx -= 1
+                    self.my += 2
+            elif self.minoangle==1:
+                if self.hitcheck(field, self.my, self.mx+1, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx += 1
+                elif self.hitcheck(field, self.my+1, self.mx+1, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx += 1
+                    self.my += 1
+                elif self.hitcheck(field, self.my-2, self.mx, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.my -= 2
+                elif self.hitcheck(field, self.my-2, self.mx+1, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx += 1
+                    self.my -= 2
+            elif self.minoangle==2:
+                if self.hitcheck(field, self.my, self.mx+1, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx += 1
+                elif self.hitcheck(field, self.my+2, self.mx, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.my += 2
+                elif self.hitcheck(field, self.my+2, self.mx+1, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx += 1
+                    self.my += 2
+            elif self.minoangle==3:
+                if self.hitcheck(field, self.my, self.mx-2, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx -= 2
+                elif self.hitcheck(field, self.my+1, self.mx-2, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx -= 2
+                    self.my += 1
+                elif self.hitcheck(field, self.my-2, self.mx, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.my -= 2
+                elif self.hitcheck(field, self.my-2, self.mx-1, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx -= 1
+                    self.my -= 2
+
+    def surperLrotation(self, field, buf):
+        # Iミノか否か
+        if self.minotype[0]==1:
+            if self.minoangle==0:
+                if self.hitcheck(field, self.my, self.mx-1, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx -= 1
+                elif self.hitcheck(field, self.my, self.mx+2, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx += 2
+                elif self.hitcheck(field, self.my-2, self.mx-1, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx -= 1
+                    self.my -= 2
+                elif self.hitcheck(field, self.my+1, self.mx+2, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx += 2
+                    self.my += 1
+            elif self.minoangle==1:
+                if self.hitcheck(field, self.my, self.mx+2, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx += 2
+                elif self.hitcheck(field, self.my, self.mx-1, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx -= 1
+                elif self.hitcheck(field, self.my-1, self.mx+2, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx += 2
+                    self.my -= 1
+                elif self.hitcheck(field, self.my+2, self.mx-1, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx -= 1
+                    self.my += 2
+            elif self.minoangle==2:
+                if self.hitcheck(field, self.my, self.mx+1, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx += 1
+                elif self.hitcheck(field, self.my, self.mx-2, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx -= 2
+                elif self.hitcheck(field, self.my+2, self.mx+1, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx += 1
+                    self.my += 2
+                elif self.hitcheck(field, self.my-1, self.mx-2, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx -= 2
+                    self.my -= 1
+            elif self.minoangle==3:
+                if self.hitcheck(field, self.my, self.mx+1, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx += 1
+                elif self.hitcheck(field, self.my, self.mx-2, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx -= 2
+                elif self.hitcheck(field, self.my+1, self.mx-2, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx -= 2
+                    self.my += 1
+                elif self.hitcheck(field, self.my-2, self.mx+1, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx += 1
+                    self.my -= 2
+        else:
+            if self.minoangle==0:
+                if self.hitcheck(field, self.my, self.mx+1, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx += 1
+                elif self.hitcheck(field, self.my-1, self.mx+1, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx += 1
+                    self.my -= 1
+                elif self.hitcheck(field, self.my+2, self.mx+1, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx += 1
+                    self.my += 2
+            elif self.minoangle==1:
+                if self.hitcheck(field, self.my, self.mx+1, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx += 1
+                elif self.hitcheck(field, self.my+1, self.mx+1, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx += 1
+                    self.my += 1
+                elif self.hitcheck(field, self.my-2, self.mx, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.my -= 2
+                elif self.hitcheck(field, self.my-2, self.mx+1, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx += 1
+                    self.my -= 2
+            elif self.minoangle==2:
+                if self.hitcheck(field, self.my, self.mx-1, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx -= 1
+                elif self.hitcheck(field, self.my+2, self.mx, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.my += 2
+                elif self.hitcheck(field, self.my+2, self.mx-1, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx -= 1
+                    self.my += 2
+            elif self.minoangle==3: 
+                if self.hitcheck(field, self.my, self.mx-1, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx -= 1
+                elif self.hitcheck(field, self.my+1, self.mx-1, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.mx -= 1
+                    self.my += 1
+                elif self.hitcheck(field, self.my-2, self.mx, self.minotype[0], buf):
+                    self.minoangle = buf
+                    self.my -= 2
+                elif self.hitcheck(field, self.my-2, self.mx-1, self.minotype[0], buf):  
+                    self.minoangle = buf
+                    self.mx -= 1
+                    self.my -= 2
