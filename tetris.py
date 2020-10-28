@@ -446,7 +446,7 @@ class Mino:
     def hitcheck(self, field, fmy,fmx,fminotype,fminoangle):
         for y in range(4):
             for x in range(4):
-                if fmx+x >=0 and fmx+x <=11 and fmy <= 20:
+                if fmx+x >=0 and fmx+x <=11 and fmy+y <= 20:
                     if field[fmy+y][fmx+x] > 0 and self.minodate[fminotype][fminoangle][y][x] > 0:
                         return False
         return True
@@ -456,7 +456,7 @@ class Mino:
         self.dmy = self.my
         for y in range(4):
             for x in range(4):
-                if self.mx+x <=11:
+                if self.mx+x >=0 and self.mx+x <=11 and self.my+y <= 20:
                     field[self.my+y][self.mx+x] = field[self.my+y][self.mx+x] or self.minodate[self.minotype[0]][self.minoangle][y][x]
 
     def delete(self, field):
@@ -480,9 +480,7 @@ class Mino:
                     self.update(field)
                     self.my = 0
                     self.mx = 5
-                    self.minoangle += 1
-                    if self.minoangle==4:
-                        self.minoangle = 0
+                    self.minoangle = 0
                     self.minotype.pop(0)
                     if len(self.minotype) <=7:
                         listbuf = [0,1,2,3,4,5,6]
