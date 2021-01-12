@@ -19,6 +19,16 @@ MINO_HEIGHT_WIDTH = 4
 FIELD_HEIGHT = 20
 FIELD_WIDTH = 10
 
+# key
+KEY_LEFT = 112
+KEY_RIGHT = 113
+KEY_DOWN = 114
+KEY_UP = 115
+KEY_TURNRIGHT = 116
+KEY_TURNLEFT = 117
+
+
+
 
 class Field:
 
@@ -175,7 +185,7 @@ class Field:
                     self.dipfield[y][x] = self.dipfield[y-1][x]
     
     def calcscore(self, y):
-        self.score += y*y*100
+        self.score += y*y
                 
 class Mino:
 
@@ -494,21 +504,21 @@ class Mino:
     def move(self,mlist,field):
         self.delete(field)
         if len(mlist)!=0:
-            if mlist[0] == "l":
+            if mlist[0] == KEY_LEFT:
                 if self.hitcheck(field, self.my, self.mx-1, self.minotype[0], self.minoangle):
                     self.mx -= 1
-            elif mlist[0] == "r":
+            elif mlist[0] == KEY_RIGHT:
                 if self.hitcheck(field, self.my, self.mx+1, self.minotype[0], self.minoangle):
                     self.mx += 1
-            elif mlist[0] == "d":
+            elif mlist[0] == KEY_DOWN:
                 if self.hitcheck(field, self.my+1, self.mx, self.minotype[0], self.minoangle):
                     self.my += 1
-            elif mlist[0] == "u":
+            elif mlist[0] == KEY_UP:
                 self.positimer += 100
                 self.droptimer += 500
                 while self.hitcheck(field, self.my+1, self.mx, self.minotype[0], self.minoangle):
                     self.my += 1
-            elif mlist[0] == "s":
+            elif mlist[0] == KEY_TURNRIGHT:
                 buf = self.minoangle
                 if self.minoangle == 3:
                     buf = 0
@@ -521,7 +531,7 @@ class Mino:
                     self.surperRrotation(field, buf)
 
                 
-            elif mlist[0] == "a":
+            elif mlist[0] == KEY_TURNLEFT:
                 buf = self.minoangle
                 if self.minoangle == 0:
                     buf = 3

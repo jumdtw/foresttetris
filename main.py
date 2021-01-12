@@ -1,5 +1,8 @@
 import tkinter
 import tetris
+import copy
+
+
 
 root = tkinter.Tk()
 root.title(u"test")
@@ -24,6 +27,12 @@ class FieldData():
         self.ffield = []
 
 
+def omega():
+    array = [tetris.KEY_LEFT, tetris.KEY_RIGHT, tetris.KEY_LEFT, tetris.KEY_RIGHT, tetris.KEY_LEFT, tetris.KEY_DOWN]
+    for x in array:
+        ctlmlist.append(x)
+
+
 def update(field, mlist):
     field.ctlmlist = mlist 
     field.mino.move(field.ctlmlist, field.dipfield)
@@ -37,7 +46,10 @@ def gameloop():
     #all field create
     update(field, ctlmlist)
     field.draw()
+    if len(ctlmlist) <= 0:
+        root.after(20, omega)
     root.after(20, gameloop)
+    
 
 def keyevent(event):
     # 入力されたキーを取得
@@ -45,22 +57,21 @@ def keyevent(event):
 
     # 入力されたキーに応じてラベルを変更
     if key == "Left":
-        ctlmlist.append('l')
+        ctlmlist.append(tetris.KEY_LEFT)
     elif key == "Right":
-        ctlmlist.append('r')
+        ctlmlist.append(tetris.KEY_RIGHT)
     elif key == "Down":
-        ctlmlist.append('d')
+        ctlmlist.append(tetris.KEY_DOWN)
     elif key == "Up":
-        ctlmlist.append('u')
+        ctlmlist.append(tetris.KEY_UP)
     elif key == "s":
-        ctlmlist.append('s')
+        ctlmlist.append(tetris.KEY_TURNRIGHT)
     elif key == "a":
-        ctlmlist.append('a')
+        ctlmlist.append(tetris.KEY_TURNLEFT)
 
 root.bind("<Key>", keyevent)
 
 def main():
-
     gameloop()
     root.mainloop()
 
