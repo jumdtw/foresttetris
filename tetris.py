@@ -36,6 +36,8 @@ class Field:
         self.mino = fmino
         self.score = 0
         self.dipfield = []
+
+        self.perfectfield = []
         self.ctlmlist = []
         self.canvas = tetcanvas
 
@@ -49,6 +51,8 @@ class Field:
                 else:
                     buf.append(0)
             self.dipfield.append(buf)
+        self.perfectfield = copy.deepcopy(self.dipfield)
+        
     
     def refresh(self):
         self.canvas.delete("all")
@@ -96,17 +100,7 @@ class Field:
                 ey += 31
 
         self.canvas.place(x=0,y=0)
-        
-        
-
-    def update(self, mlist, scoretxt):
-        self.ctlmlist = mlist 
-        self.mino.move(self.ctlmlist, self.dipfield)
-        if self.mino.drop(self.dipfield):
-            self.checkline()
-            scoretxt.set("Score : " + str(self.score))
-        self.mino.update(self.dipfield)
-        
+                
     
     def draw(self):
         fy = 101
@@ -183,9 +177,46 @@ class Field:
                     self.dipfield[y][x] = 0
                 else:
                     self.dipfield[y][x] = self.dipfield[y-1][x]
-    
+    # 火力計算参考 ： https://ch-random.net/post/96/
     def calcscore(self, y):
-        self.score += y*y
+        s = 0
+        # back to back なし
+        # ren なし
+        # 素火力
+        # single 0
+        # double 1
+        # triple 2
+        # Tetris 4
+        # Tspin mini 0 back to back ないので意味なし
+        # Tspin single 2
+        # Tspin double 4
+        # Tspin triple 6
+        if self.checkperfect():
+            s = 10
+        elif self.mino.tspinflag and y==1:
+            s = 2
+        elif self.mino.tspinflag and y==2:
+            s = 4
+        elif self.mino.tspinflag and y==3:
+            s = 6
+        elif y==1:
+            s = 0
+        elif y==2:
+            s = 1
+        elif y==3:
+            s = 2
+        elif y==4:
+            s = 4
+        self.score += s*s*10
+        self.mino.tspinflag = False
+
+    def checkperfect(self):
+        for y in range(FIELD_HEIGHT+1):
+            for x in range(FIELD_WIDTH+2):
+                if not self.dipfield[y][x] == self.perfectfield[y][x]:
+                    return False
+        return True
+
                 
 class Mino:
 
@@ -444,19 +475,21 @@ class Mino:
         self.dmx = 0
         self.dmy = 0
         self.minoangle=0
+        self.dminoangle=0
         self.droptimer = 0
         self.positimer = 0
-        self.minotype = [0,1,2,3,4,5,6]
+        self.minotype = []
+        self.tspinflag = False
         random.shuffle(self.minotype)
         listbuf = [0,1,2,3,4,5,6]
         random.shuffle(listbuf)
         self.minotype.extend(listbuf)
 
-
+    # ヒットしたら false
     def hitcheck(self, field, fmy,fmx,fminotype,fminoangle):
         for y in range(4):
             for x in range(4):
-                if fmx+x >=0 and fmx+x <=11 and fmy+y <= 20:
+                if fmx+x >= 0 and fmx+x <= 11 and fmy+y <= 20:
                     if field[fmy+y][fmx+x] > 0 and self.minodate[fminotype][fminoangle][y][x] > 0:
                         return False
         return True
@@ -466,7 +499,7 @@ class Mino:
         self.dmy = self.my
         for y in range(4):
             for x in range(4):
-                if self.mx+x >=0 and self.mx+x <=11 and self.my+y <= 20:
+                if self.mx+x >=1 and self.mx+x <=11 and self.my+y <= 20:
                     field[self.my+y][self.mx+x] = field[self.my+y][self.mx+x] or self.minodate[self.minotype[0]][self.minoangle][y][x]
 
     def delete(self, field):
@@ -474,18 +507,45 @@ class Mino:
             for x in range(4):
                 if self.minodate[self.minotype[0]][self.minoangle][y][x] > 0:
                     field[self.dmy+y][self.dmx+x] = 0
+        # これやらないと壁が消える
+        for y in range(FIELD_HEIGHT+1):
+            field[y][0] = 1
+            field[y][11] = 1
+        for x in range(FIELD_WIDTH):
+            field[20][x] = 1
+
+
+
+    # tspin の判定 参考 ： https://tetris-matome.com/judgment/
+    def tspin_judge(self, field):
+        # y:0, x:0
+        # y:0, x:2
+        # y:2, x:0
+        # y:2, x:2
+        # のうち、3つ以上が埋まってた場合Tspin
+        c = 0
+        ty = [0,0,2,2]
+        tx = [0,2,0,2] 
+        for q in range(4):
+            if field[self.my+ty[q]][self.mx+tx[q]] >= 1:
+                c += 1
+        if c >= 3:
+            self.tspinflag = True
+
 
     def drop(self, field):
+        # game over 判定用
         flag = False
         self.droptimer += 20
-        #self.delete(field)
         if self.droptimer >= 500:
             if self.hitcheck(field, self.my+1, self.mx, self.minotype[0], self.minoangle):
                 self.my += 1
+                self.positimer = 0
             else:
                 self.positimer += 50
                 if self.positimer >= 100:
-                    flag = True
+                    if self.minotype[0] == 0:
+                        self.tspin_judge(field)
                     self.positimer = 0
                     self.update(field)
                     self.my = 0
@@ -497,12 +557,17 @@ class Mino:
                         random.shuffle(listbuf)
                         self.minotype.extend(listbuf)
                     self.droptimer = 0
+                    # 紛らわしいけど、これはヒットした場合のチェック
+                    # def hitcheck(self, field, fmy,fmx,fminotype,fminoangle):
+                    if not self.hitcheck(field, self.my, self.mx, self.minotype[0], self.minoangle):
+                        flag = True
             self.droptimer = 0
         return flag
 
     #https://tetrisch.github.io/main/srs.html
     def move(self,mlist,field):
         self.delete(field)
+        #field = copy.deepcopy(self.delete(field))
         if len(mlist)!=0:
             if mlist[0] == KEY_LEFT:
                 if self.hitcheck(field, self.my, self.mx-1, self.minotype[0], self.minoangle):
