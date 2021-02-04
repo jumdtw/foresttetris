@@ -126,6 +126,21 @@ class Omegaplayer:
                     lflag = False
                     #print(6, end="")
                     #print("[" + str(pid) + "]" + ", mx : " + str(mx) + ", my : " + str(my) + ", ang : " + str(mang))
+                #逆算してるからlrolは右回ししたとき、 rrolは左回ししたとき
+                elif len(vec:=self.superrrolcheck(mx, my, angminus, self.omegamino.minotype[0]))<0 and (not my==0 or not mang==0) and not lrolflag:
+                    mang = angminus
+                    my = vec[0]
+                    mx = vec[1]
+                    rrolflag = True
+                    rflag = False
+                    lflag = False
+                elif len(vec:=self.superlrolcheck(mx, my, angminus, self.omegamino.minotype[0]))<0 and (not my==0 or not mang==0) and not rrolflag:
+                    mang = angminus
+                    my = vec[0]
+                    mx = vec[1]
+                    lrolflag = True
+                    rflag = False
+                    lflag = False
                 else:
                     flag = False
                     rflag = False
@@ -144,6 +159,93 @@ class Omegaplayer:
         #print("a;fak;djf : " + str(len(rlist)))
         return rlist
     
+    # 移動前の場所がヒットしていないかのチェックをする
+    def superrrolcheck(self, mx, my, mang, mtype):
+        # 逆算なので左回転してもとに戻す
+        angminus = mang-1
+        # i minoの動きスーパーローテイションにおけるムーブリスト
+        # y, x の順番だから注意
+        iposlist=[
+            # i mino ang = 0
+            [[0, -2], [0, 1], [1, -2], [-2, 1]],
+            # i mino ang = 1
+            [[0, -1], [0, 2], [-2, -1], [1, 2]],
+            # i mino ang = 2
+            [[0, 2], [0, -1], [-1, 2], [2, -1]],
+            # i mino ang = 3
+            [[0, -2], [0, 1], [2, 1], [-1, -2]],
+        ]
+        # i mino以外のやつ 
+        anoposlist = [
+            # another mino ang = 0
+            [[0, -1], [-1, -1], [2, -1], []],
+            # another mino ang = 1
+            [[0, 1], [1, 1], [-2, 0], [-2, 1]],
+            # another mino ang = 2
+            [[0, 1], [2, 0], [2, 1], []],
+            # another mino ang = 3
+            [[0, -2], [1, -2], [-2, 0], [-2, -1]],
+        ]
+        if mang ==0:
+            angminus = 3
+        
+        if mtype==1:
+            for q in range(4):
+                if self.omegamino.hitcheck(self.field, my-iposlist[angminus][q][0], mx-iposlist[angminus][q][1], mtype, angminus):
+                    return iposlist[angminus][q]
+        else:
+            for q in range(4):
+                if len(anoposlist[angminus][q]) <=0:
+                    continue
+                if self.omegamino.hitcheck(self.field, my-anoposlist[angminus][q][1], mx-anoposlist[angminus][q][0], mtype, angminus):
+                    return anoposlist[angminus][q]
+
+        return []
+    
+    # 移動前の場所がヒットしていないかのチェックをする
+    def superlrolcheck(self, mx, my, mang, mtype):
+        # 逆算なので左回転してもとに戻す
+        angplus = mang+1
+        # i minoの動きスーパーローテイションにおけるムーブリスト
+        # y, x の順番だから注意
+        iposlist=[
+            # i mino ang = 0
+            [[0, -1], [0, 2], [-2, -1], [1, 2]],
+            # i mino ang = 1
+            [[0, 2], [0, -1], [-1, 2], [2, -1]],
+            # i mino ang = 2
+            [[0, 1], [0, -2], [2, 1], [-1, -2]],
+            # i mino ang = 3
+            [[0, 1], [0, -2], [1, -2], [-2, 1]],
+        ]
+        # i mino以外のやつ 
+        anoposlist = [
+            # another mino ang = 0
+            [[0, 1], [-1, 1], [2, 1], []],
+            # another mino ang = 1
+            [[0, 1], [1, 1], [-2, 0], [-2, 1]],
+            # another mino ang = 2
+            [[0, -1], [2, 0], [2, -1], []],
+            # another mino ang = 3
+            [[0, -1], [1, -1], [-2, 0], [-2, -1]],
+        ]
+        if mang==3:
+            angplus = 0
+        
+        if mtype==1:
+            for q in range(4):
+                if self.omegamino.hitcheck(self.field, my-iposlist[angplus][q][0], mx-iposlist[angplus][q][1], mtype, angplus):
+                    return iposlist[angplus][q]
+        else:
+            for q in range(4):
+                if len(anoposlist[angplus][q]) <=0:
+                    continue
+                if self.omegamino.hitcheck(self.field, my-anoposlist[angplus][q][1], mx-anoposlist[angplus][q][0], mtype, angplus):
+                    return anoposlist[angplus][q]
+
+        return []
+
+
     def pos_cmp(self, mvlist, mx, my):
         for p in mvlist:
             if mx==p[0] and my==p[1]:
