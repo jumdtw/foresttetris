@@ -288,63 +288,37 @@ class Omegaplayer:
     
     def evaulate_map(self):
         self.calcflag = True
+        # 新しいミノに切り替わるため、動きの軌跡を初期化
+        self.omegaminomvlist = []
         maplist = self.search_map()
         mr = random.randint(0,len(maplist)-1)
+        # コンソールにデバッグ画面の表示
         self.debug_emap_print(maplist, mr)
+        # 新しい評価盤面を追加するため先頭を削除
         self.posminolist.pop(0)
         self.posminolist.append(maplist[mr])
         self.calcflag = False
 
 
-    # 同じ座標にいたら違う行動をとるように修正が必要
+    # 手順としては、１，ミノのangを合わせるー＞２，ミノのxをそろえるー＞３，ミノのyをそろえる
+    # tspin等は、回転するその一歩手前に目標座標を設置し、回転させる
     def return_ctllist(self, curx, cury, curang):
         self.calcflag = True
-        key = tetris.KEY_LEFT
-        angplus = curang + 1
-        angminus = curang - 1
-        if curang ==3:
-            angplus = 0
-        elif curang ==0:
-            angminus = 3
-        rflag = False
-        lflag = False
-        rrolflag = False
-        lrolflag = False
+        key = tetris.KEY_UP
         # 目的座標
         # 0:x, 1:y, 2:ang
         fmino = self.posminolist[0]
-        if self.omegamino.hitcheck(self.field, cury, curx+1, self.omegamino.minotype[0], curang) and curx < fmino[0] and not curx==fmino[0] and not lflag:
-            rflag = True
-            rrolflag = False
-            lrolflag = False
-            key = tetris.KEY_RIGHT
-        elif self.omegamino.hitcheck(self.field, cury, curx-1, self.omegamino.minotype[0], curang) and curx > fmino[0] and not curx==fmino[0] and not rflag:
-            lflag = True
-            rrolflag = False
-            lrolflag = False
-            key = tetris.KEY_LEFT
-        elif self.omegamino.hitcheck(self.field, cury+1, curx, self.omegamino.minotype[0], curang) and not cury==fmino[1]:
-            rrolflag = False
-            lrolflag = False
-            rflag = False
-            lflag = False
-            key = tetris.KEY_DOWN
-        elif self.omegamino.hitcheck(self.field, cury, curx, self.omegamino.minotype[0], angplus) and (not curang==fmino[2] or not cury==fmino[1]) and not lrolflag:
-            rrolflag = True
-            rflag = False
-            lflag = False
+        # 回転
+        if not curang==fmino[2]:
             key = tetris.KEY_TURNRIGHT
-        elif self.omegamino.hitcheck(self.field, cury, curx, self.omegamino.minotype[0], angminus) and (not curang==fmino[2] or not cury==fmino[1]) and not rrolflag:
-            lrolflag = True
-            rflag = False
-            lflag = False
-            key = tetris.KEY_TURNLEFT
-        else:
-            rrolflag = False
-            lrolflag = False
-            rflag = False
-            lflag = False
-            key = tetris.KEY_UP
+        elif curx < fmino[0]:
+            print(f"RIGHT : {curx} : {fmino[0]}")
+            key = tetris.KEY_RIGHT
+        elif curx > fmino[0]:
+            print(f"LEFT : {curx} : {fmino[0]}")
+            key = tetris.KEY_LEFT
+        elif not cury==fmino[1]:
+            key = tetris.KEY_DOWN
 
         self.calcflag = False
         return key

@@ -54,7 +54,7 @@ def gamereset():
     global omegaplayer
     field = tetris.Field(fmino=tetris.Mino(), tetcanvas=canvas)
     omegaplayer = omega.Omegaplayer()
-    root.after(20, gameloop)
+    root.after(100, gameloop)
 
 def keyevent(event):
     # 入力されたキーを取得
