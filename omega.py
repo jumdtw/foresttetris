@@ -2,7 +2,29 @@ import tetris
 import copy
 import random
 import os
+import json
 
+class Omegamap:
+    # 目的座標までの軌跡
+    # xspinが紛らわしい
+    '''
+    aa =  {
+            "X":1,
+            "Y":1,
+            "ANG":1,
+            "SPIN":[],
+            "NEXT":{
+                "X":2,
+                "Y":2,
+                "ANG":2,
+                "SPIN"
+                "NEXT":{
+                
+                }
+            }
+        }
+    '''
+    
 class Omegaplayer:
 
     def __init__(self):

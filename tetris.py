@@ -191,7 +191,7 @@ class Field:
         # Tspin single 2
         # Tspin double 4
         # Tspin triple 6
-        if self.checkperfect():
+        if self.checkperfect() and not y==0:
             s = 10
         elif self.mino.tspinflag and y==1:
             s = 2
