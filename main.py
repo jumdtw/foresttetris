@@ -46,7 +46,7 @@ def gameloop():
     else:
         player = threading.Thread(target=player_return_ctllist)
         player.start()
-    root.after(20, gameloop)
+    root.after(15, gameloop)
     
 def gamereset():
     canvas = tkinter.Canvas(root, width=800, height=800)

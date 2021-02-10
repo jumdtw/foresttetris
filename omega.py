@@ -70,205 +70,188 @@ class Omegaplayer:
         rlist = self.placement_map(poslist)
 
         return rlist
+
+    # Trueなら上からそのまま刺せる、Falseなら横移動が必要かそもそも設置が無理
+    def drop_judge(self, field, minotype, minoang, mx, my):
+        widthlist = [
+            # x = 0
+            99,
+            # x = 1
+            99,
+            # x = 2
+            99,
+            # x = 3
+            99
+        ]
+        for y in range(4):
+            for x in range(4):
+                if self.omegamino.minodate[minotype][minoang][y][x] >= 1:
+                    # 横幅とそのピクセルの位置を把握
+                    if widthlist[x] >= y:
+                        widthlist[x] = y
+
+        for i,q in enumerate(widthlist):
+            if q>=99:
+                continue
+            bufy = my + q - 1 
+            while bufy >=0:
+                if not field[bufy][mx+i] == 0:
+                    return False
+                bufy-=1
+        return True
+        
+
+    # spin 必要な場合はtrue, いらない場合はfalse
+    def xspin_judge(self, field, minotype, minoang, mx, my):
+        xspinX=0
+        xspinY=1
+        c=0
+        # xspin[minotype][minoang][mx or my][index]
+        xspin = [
+            # tspin
+            [
+                # ang = 0
+                [
+                    [0,0,2,2],
+                    [0,2,0,2]
+                ],
+                # ang = 1
+                [
+                    [0,0,2,2],
+                    [0,2,0,2]
+                ],
+                # ang = 2
+                [
+                    [0,0,2,2],
+                    [0,2,0,2]
+                ],
+                # ang = 3
+                [
+                    [0,0,2,2],
+                    [0,2,0,2]
+                ],               
+            ],
+            # ispin 存在しない
+            [],
+            # ospin 存在しない
+            [],
+            # Lspin 
+            [
+                [
+                    # 必要個数が3つなので同じものをかぶせて4回に統一している
+                    [0,0,0,2],
+                    [0,0,2,2]
+                ],
+                [
+                    [0,2,0,0],
+                    [0,0,2,2]
+                ],
+                [
+                    [0,2,2,2],
+                    [0,0,2,2]
+                ],
+                [
+                    [2,2,0,2],
+                    [0,0,2,2]
+                ],
+            ],
+            # Jspin 
+            [
+                [
+                    # 必要個数が3つなので同じものをかぶせて4回に統一している
+                    [2,2,0,2],
+                    [0,0,2,2]
+                ],
+                [
+                    [0,0,0,2],
+                    [0,0,2,2]
+                ],
+                [
+                    [0,2,0,0],
+                    [0,0,2,2]
+                ],
+                [
+                    [0,2,2,2],
+                    [0,0,2,2]
+                ],
+            ],
+            # Sspin 
+            [
+                [
+                    # 必要個数が2つなので同じものをかぶせて4回に統一している
+                    [0,0,2,2],
+                    [0,0,1,1]
+                ],
+                [
+                    [2,2,1,1],
+                    [0,0,2,2]
+                ],
+                [
+                    [0,0,2,2],
+                    [1,1,2,2]
+                ],
+                [
+                    [1,1,0,0],
+                    [0,0,2,2]
+                ],
+            ],
+            # Zspin 
+            [
+                [
+                    # 必要個数が2つなので同じものをかぶせて4回に統一している
+                    [2,2,0,0],
+                    [0,0,1,1]
+                ],
+                [
+                    [1,1,2,2],
+                    [0,0,2,2]
+                ],
+                [
+                    [2,2,0,0],
+                    [1,1,2,2]
+                ],
+                [
+                    [0,0,1,1],
+                    [0,0,2,2]
+                ],
+            ],
+        ]
+        # T,I,O,L,J,S,Z
+        judge_count = [3,99,99,3,3,2,2]
+        
+        for q in range(4):
+            if minotype==tetris.MINO_O or minotype==tetris.MINO_I:
+                continue
+            bufx = mx + xspin[minotype][minoang][xspinX][q]
+            bufy = my + xspin[minotype][minoang][xspinY][q]
+            if (bufx >=tetris.FIELD_WIDTH+1 or bufx <= 0) or (bufy >= tetris.FIELD_HEIGHT or bufy <= 0):
+                continue
+            if field[bufy][bufx] >= 1:
+                c+=1
+                if c >= judge_count[minotype]:
+                    return True
+        return False
     
     # search_mapして得られた設置可能x,y,angを逆算して配置可能か調べる
     def placement_map(self, poslist):
         rlist = []
         pid = 0
+        # [x, y, ang]
         for p in poslist:
+            # 上から刺せるかをまず確認する。
+            if self.drop_judge(self.field, self.omegamino.minotype[0], p[2], p[0], p[1]):
+                rlist.append(p)
+                continue
+            else:
+                continue
+            # spin が必要ない場合で基本的には上から落とせる
+            # ホールの場合この判定だとバグるがそもそもホールはいい盤面とは言えないのでこれでおけ
+            if not self.xspin_judge(self.field, self.omegamino.minotype[0], p[2], p[0], p[1]):
+                rlist.append(p)
+                continue
             
-            c=0
-            flag = True
-            mx = p[0]
-            my = p[1]
-            mang = p[2]
-            # 袋小路に入って右左を繰り返さないようにするためのフラッグ
-            rflag = False
-            lflag = False
-            # 上とほぼ同じ理由。右回転左回転を繰り返さないようにするための処理
-            rrolflag = False
-            lrolflag = False
-            # 動きの軌跡。理論的には同じ場所に行かないはずなので
-            mvlist = []
-
-            while flag:
-                
-                c +=1
-                angplus = mang + 1
-                angminus = mang - 1
-                if mang ==3:
-                    angplus = 0
-                elif mang ==0:
-                    angminus = 3
-
-                # 逆算して戻ってこれたので配置可能
-                if mx==5 and my==0 and mang==0:
-                    flag = False
-                    rflag = False
-                    lflag = False
-                    rrolflag = False
-                    lrolflag = False
-                    rlist.append(p)
-                    #print(1)
-                elif self.omegamino.hitcheck(self.field, my-1, mx, self.omegamino.minotype[0], mang) and (not my==0) and self.pos_cmp(mvlist, mx, my-1):
-                    my -= 1
-                    mvlist.append([mx, my])
-                    rflag = False
-                    lflag = False
-                    rrolflag = False
-                    lrolflag = False
-                    #print(2, end="")
-                    #print("[" + str(pid) + "]" + ", mx : " + str(mx) + ", my : " + str(my) + ", ang : " + str(mang))
-                elif self.omegamino.hitcheck(self.field, my, mx+1, self.omegamino.minotype[0], mang) and ((not my==0) or mx<5) and not lflag and self.pos_cmp(mvlist, mx+1, my):
-                    mx += 1
-                    mvlist.append([mx, my])
-                    rflag=True
-                    rrolflag = False
-                    lrolflag = False
-                    #print(3, end="")
-                    #print("[" + str(pid) + "]" + ", mx : " + str(mx) + ", my : " + str(my) + ", ang : " + str(mang))
-                elif self.omegamino.hitcheck(self.field, my, mx-1, self.omegamino.minotype[0], mang) and ((not my==0) or mx>5) and not rflag and self.pos_cmp(mvlist, mx-1, my):
-                    mx -= 1
-                    mvlist.append([mx, my])
-                    lflag=True
-                    rrolflag = False
-                    lrolflag = False
-                    #print(4, end="")
-                    #print("[" + str(pid) + "]" + ", mx : " + str(mx) + ", my : " + str(my) + ", ang : " + str(mang))
-                elif self.omegamino.hitcheck(self.field, my, mx, self.omegamino.minotype[0], angplus) and (not my==0 or not mang==0) and not lrolflag and (not self.omegamino.minotype[0]==tetris.MINO_O) and (not self.omegamino.minotype[0]==tetris.MINO_T):
-                    mang = angplus
-                    rrolflag = True
-                    rflag = False
-                    lflag = False
-                    #print(5, end="")
-                    #print("[" + str(pid) + "]" + ", mx : " + str(mx) + ", my : " + str(my) + ", ang : " + str(mang))
-                elif self.omegamino.hitcheck(self.field, my, mx, self.omegamino.minotype[0], angminus) and (not my==0 or not mang==0) and not rrolflag and (not self.omegamino.minotype[0]==tetris.MINO_O) and (not self.omegamino.minotype[0]==tetris.MINO_T):
-                    mang = angminus
-                    lrolflag = True
-                    rflag = False
-                    lflag = False
-                    #print(6, end="")
-                    #print("[" + str(pid) + "]" + ", mx : " + str(mx) + ", my : " + str(my) + ", ang : " + str(mang))
-                #逆算してるからlrolは右回ししたとき、 rrolは左回ししたとき
-                elif len(vec:=self.superrrolcheck(mx, my, angminus, self.omegamino.minotype[0]))<0 and (not my==0 or not mang==0) and not lrolflag:
-                    mang = angminus
-                    my = vec[0]
-                    mx = vec[1]
-                    rrolflag = True
-                    rflag = False
-                    lflag = False
-                elif len(vec:=self.superlrolcheck(mx, my, angminus, self.omegamino.minotype[0]))<0 and (not my==0 or not mang==0) and not rrolflag:
-                    mang = angminus
-                    my = vec[0]
-                    mx = vec[1]
-                    lrolflag = True
-                    rflag = False
-                    lflag = False
-                else:
-                    flag = False
-                    rflag = False
-                    lflag = False
-                    rrolflag = False
-                    lrolflag = False
-                    #print(7, end="")
-                    #print("[" + str(pid) + "]" + "mx : " + str(mx) + ", my : " + str(my) + ", ang : " + str(mang))
-                
-                if c > 150:
-                    self.debug_emap_print(poslist, pid)
-                    print("error")
-                    exit(1)
-            pid += 1
-
-        #print("a;fak;djf : " + str(len(rlist)))
         return rlist
     
-    # 移動前の場所がヒットしていないかのチェックをする
-    def superrrolcheck(self, mx, my, mang, mtype):
-        # 逆算なので左回転してもとに戻す
-        angminus = mang-1
-        # i minoの動きスーパーローテイションにおけるムーブリスト
-        # y, x の順番だから注意
-        iposlist=[
-            # i mino ang = 0
-            [[0, -2], [0, 1], [1, -2], [-2, 1]],
-            # i mino ang = 1
-            [[0, -1], [0, 2], [-2, -1], [1, 2]],
-            # i mino ang = 2
-            [[0, 2], [0, -1], [-1, 2], [2, -1]],
-            # i mino ang = 3
-            [[0, -2], [0, 1], [2, 1], [-1, -2]],
-        ]
-        # i mino以外のやつ 
-        anoposlist = [
-            # another mino ang = 0
-            [[0, -1], [-1, -1], [2, -1], []],
-            # another mino ang = 1
-            [[0, 1], [1, 1], [-2, 0], [-2, 1]],
-            # another mino ang = 2
-            [[0, 1], [2, 0], [2, 1], []],
-            # another mino ang = 3
-            [[0, -2], [1, -2], [-2, 0], [-2, -1]],
-        ]
-        if mang ==0:
-            angminus = 3
-        
-        if mtype==1:
-            for q in range(4):
-                if self.omegamino.hitcheck(self.field, my-iposlist[angminus][q][0], mx-iposlist[angminus][q][1], mtype, angminus):
-                    return iposlist[angminus][q]
-        else:
-            for q in range(4):
-                if len(anoposlist[angminus][q]) <=0:
-                    continue
-                if self.omegamino.hitcheck(self.field, my-anoposlist[angminus][q][1], mx-anoposlist[angminus][q][0], mtype, angminus):
-                    return anoposlist[angminus][q]
-
-        return []
-    
-    # 移動前の場所がヒットしていないかのチェックをする
-    def superlrolcheck(self, mx, my, mang, mtype):
-        # 逆算なので左回転してもとに戻す
-        angplus = mang+1
-        # i minoの動きスーパーローテイションにおけるムーブリスト
-        # y, x の順番だから注意
-        iposlist=[
-            # i mino ang = 0
-            [[0, -1], [0, 2], [-2, -1], [1, 2]],
-            # i mino ang = 1
-            [[0, 2], [0, -1], [-1, 2], [2, -1]],
-            # i mino ang = 2
-            [[0, 1], [0, -2], [2, 1], [-1, -2]],
-            # i mino ang = 3
-            [[0, 1], [0, -2], [1, -2], [-2, 1]],
-        ]
-        # i mino以外のやつ 
-        anoposlist = [
-            # another mino ang = 0
-            [[0, 1], [-1, 1], [2, 1], []],
-            # another mino ang = 1
-            [[0, 1], [1, 1], [-2, 0], [-2, 1]],
-            # another mino ang = 2
-            [[0, -1], [2, 0], [2, -1], []],
-            # another mino ang = 3
-            [[0, -1], [1, -1], [-2, 0], [-2, -1]],
-        ]
-        if mang==3:
-            angplus = 0
-        
-        if mtype==1:
-            for q in range(4):
-                if self.omegamino.hitcheck(self.field, my-iposlist[angplus][q][0], mx-iposlist[angplus][q][1], mtype, angplus):
-                    return iposlist[angplus][q]
-        else:
-            for q in range(4):
-                if len(anoposlist[angplus][q]) <=0:
-                    continue
-                if self.omegamino.hitcheck(self.field, my-anoposlist[angplus][q][1], mx-anoposlist[angplus][q][0], mtype, angplus):
-                    return anoposlist[angplus][q]
-
-        return []
-
-
     def pos_cmp(self, mvlist, mx, my):
         for p in mvlist:
             if mx==p[0] and my==p[1]:
@@ -310,8 +293,6 @@ class Omegaplayer:
     
     def evaulate_map(self):
         self.calcflag = True
-        # 新しいミノに切り替わるため、動きの軌跡を初期化
-        self.omegaminomvlist = []
         maplist = self.search_map()
         mr = random.randint(0,len(maplist)-1)
         # コンソールにデバッグ画面の表示
