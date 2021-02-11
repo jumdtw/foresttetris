@@ -12,7 +12,9 @@ class Omegamap:
             "X":1,
             "Y":1,
             "ANG":1,
-            "SPIN":[],
+            スピンか横移動が必要な場合のmove. 直接 tetris.KEY_hogeをぶち込む
+            "MOVE":[],
+            基本これいらいないかも
             "NEXT":{
                 "X":2,
                 "Y":2,
@@ -24,6 +26,20 @@ class Omegamap:
             }
         }
     '''
+    def __init__(self, x, y, ang, move):
+        self.map = {}
+        self.map['desx'] = x
+        self.map['desy'] = y
+        self.map['desang'] = ang
+        # 再度単純操作でゴールへと導くために、ここで軽く操作する
+        self.map['desmove'] = move
+        self.map['next'] = 0
+
+    def add_next(self, x, y, ang, move):
+        self.map['next'] = Omegamap(x, y, ang, move)
+
+        
+        
     
 class Omegaplayer:
 
@@ -64,7 +80,7 @@ class Omegaplayer:
                 for x in range(tetris.FIELD_WIDTH):
                     if self.omegamino.hitcheck(self.field, y, x, self.omegamino.minotype[0], ang):
                         if not self.omegamino.hitcheck(self.field, y+1, x, self.omegamino.minotype[0], ang):
-                            poslist.append([x, y, ang])
+                            poslist.append(Omegamap(x, y, ang, []))
                 y+=1
 
         rlist = self.placement_map(poslist)
@@ -239,14 +255,14 @@ class Omegaplayer:
         # [x, y, ang]
         for p in poslist:
             # 上から刺せるかをまず確認する。
-            if self.drop_judge(self.field, self.omegamino.minotype[0], p[2], p[0], p[1]):
+            if self.drop_judge(self.field, self.omegamino.minotype[0], p.map["desang"], p.map["desx"], p.map['desy']):
                 rlist.append(p)
                 continue
             else:
                 continue
             # spin が必要ない場合で基本的には上から落とせる
             # ホールの場合この判定だとバグるがそもそもホールはいい盤面とは言えないのでこれでおけ
-            if not self.xspin_judge(self.field, self.omegamino.minotype[0], p[2], p[0], p[1]):
+            if not self.xspin_judge(self.field, self.omegamino.minotype[0], p.map["desang"], p.map["desx"], p.map['desy']):
                 rlist.append(p)
                 continue
             
@@ -261,9 +277,9 @@ class Omegaplayer:
     
     def debug_emap_print(self, maplist, index):
         os.system('cls')
-        x = maplist[index][0]
-        y = maplist[index][1]
-        ang = maplist[index][2]
+        x = maplist[index].map['desx']
+        y = maplist[index].map['desy']
+        ang = maplist[index].map['desang']
         buffield = copy.deepcopy(self.field)
         for fy in range(4):
             for fx in range(4):
@@ -312,15 +328,15 @@ class Omegaplayer:
         # 0:x, 1:y, 2:ang
         fmino = self.posminolist[0]
         # 回転
-        if not curang==fmino[2]:
+        if not curang==fmino.map['desang']:
             key = tetris.KEY_TURNRIGHT
-        elif curx < fmino[0]:
-            print(f"RIGHT : {curx} : {fmino[0]}")
+        elif curx < fmino.map['desx']:
+            print(f"RIGHT : {curx} : {fmino.map['desx']}")
             key = tetris.KEY_RIGHT
-        elif curx > fmino[0]:
-            print(f"LEFT : {curx} : {fmino[0]}")
+        elif curx > fmino.map['desx']:
+            print(f"LEFT : {curx} : {fmino.map['desx']}")
             key = tetris.KEY_LEFT
-        elif not cury==fmino[1]:
+        elif not cury==fmino.map['desy']:
             key = tetris.KEY_DOWN
 
         self.calcflag = False

@@ -6,9 +6,6 @@ import time
 import threading
 
 
-
-
-
 def player_evaluate_map():
     omegaplayer.evaulate_map()
 
