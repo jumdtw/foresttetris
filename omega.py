@@ -107,6 +107,8 @@ class Omegaplayer:
                         widthlist[x] = y
 
         for i,q in enumerate(widthlist):
+            if mx+i >= tetris.FIELD_WIDTH+1:
+                continue
             if q>=99:
                 continue
             bufy = my + q - 1 
@@ -258,13 +260,41 @@ class Omegaplayer:
             if self.drop_judge(self.field, self.omegamino.minotype[0], p.map["desang"], p.map["desx"], p.map['desy']):
                 rlist.append(p)
                 continue
+            # 横移動させて上からさせないかを確認
+            elif self.omegamino.hitcheck(self.field, p.map['desy'], p.map["desx"]+1, self.omegamino.minotype[0], p.map["desang"]):
+                if self.drop_judge(self.field, self.omegamino.minotype[0], p.map["desang"], p.map["desx"]+1, p.map['desy']):
+                    p.map["desx"] = p.map["desx"] + 1
+                    p.map['desmove'].append(tetris.KEY_LEFT)
+                    rlist.append(p)
+                    continue
+            elif self.omegamino.hitcheck(self.field, p.map['desy'], p.map["desx"]+2, self.omegamino.minotype[0], p.map["desang"]):
+                if self.drop_judge(self.field, self.omegamino.minotype[0], p.map["desang"], p.map["desx"]+2, p.map['desy']):
+                    p.map["desx"] = p.map["desx"] + 2
+                    p.map['desmove'].append(tetris.KEY_LEFT)
+                    p.map['desmove'].append(tetris.KEY_LEFT)
+                    rlist.append(p)
+                    continue
+            elif self.omegamino.hitcheck(self.field, p.map['desy'], p.map["desx"]-1, self.omegamino.minotype[0], p.map["desang"]):
+                if self.drop_judge(self.field, self.omegamino.minotype[0], p.map["desang"], p.map["desx"]-1, p.map['desy']):
+                    p.map["desx"] = p.map["desx"] - 1
+                    p.map['desmove'].append(tetris.KEY_RIGHT)
+                    rlist.append(p)
+                    continue
+            elif self.omegamino.hitcheck(self.field, p.map['desy'], p.map["desx"]-2, self.omegamino.minotype[0], p.map["desang"]):
+                if self.drop_judge(self.field, self.omegamino.minotype[0], p.map["desang"], p.map["desx"]-2, p.map['desy']):
+                    p.map["desx"] = p.map["desx"] - 2
+                    p.map['desmove'].append(tetris.KEY_RIGHT)
+                    p.map['desmove'].append(tetris.KEY_RIGHT)
+                    rlist.append(p)
+                    continue
             else:
                 continue
+
             # spin が必要ない場合で基本的には上から落とせる
             # ホールの場合この判定だとバグるがそもそもホールはいい盤面とは言えないのでこれでおけ
-            if not self.xspin_judge(self.field, self.omegamino.minotype[0], p.map["desang"], p.map["desx"], p.map['desy']):
-                rlist.append(p)
-                continue
+            #if not self.xspin_judge(self.field, self.omegamino.minotype[0], p.map["desang"], p.map["desx"], p.map['desy']):
+            #    rlist.append(p)
+            #    continue
             
         return rlist
     
@@ -328,7 +358,14 @@ class Omegaplayer:
         # 0:x, 1:y, 2:ang
         fmino = self.posminolist[0]
         # 回転
-        if not curang==fmino.map['desang']:
+        if curang==fmino.map['desang'] and curx==fmino.map['desx'] and cury==fmino.map['desy'] and not len(fmino.map['desmove'])==0:
+            print("d;alfjksd;lkfajsd")
+            key = fmino.map['desmove'].pop(0)
+            if key ==tetris.KEY_LEFT:
+                self.posminolist[0].map['desx'] = self.posminolist[0].map['desx'] - 1
+            elif key ==tetris.KEY_RIGHT:
+                self.posminolist[0].map['desx'] = self.posminolist[0].map['desx'] + 1
+        elif not curang==fmino.map['desang']:
             key = tetris.KEY_TURNRIGHT
         elif curx < fmino.map['desx']:
             print(f"RIGHT : {curx} : {fmino.map['desx']}")
