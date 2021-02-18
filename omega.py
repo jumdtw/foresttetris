@@ -4,6 +4,20 @@ import random
 import os
 import json
 
+'''
+学習順序
+
+１，手とる
+
+２，盤面を毎回評価する。その際の 特徴量は各ゲーム単位ですべて保存する。
+
+３，ゲームが終了したら（ゲームオーバーか５０ライン消し終わったら）、その保存した特徴量群とスコアを紐づけて保存する
+
+４，１０００ゲーム分くらいたまったら、スコアを比較して上位100位を学習させる（もしくは特徴量数で決める）
+
+５，やったね。
+'''
+
 class Omegamap:
     # 目的座標までの軌跡
     # xspinが紛らわしい
@@ -274,6 +288,23 @@ class Omegaplayer:
                     p.map['desmove'].append(tetris.KEY_LEFT)
                     rlist.append(p)
                     continue
+            elif self.omegamino.hitcheck(self.field, p.map['desy'], p.map["desx"]+1, self.omegamino.minotype[0], p.map["desang"]):
+                if self.drop_judge(self.field, self.omegamino.minotype[0], p.map["desang"], p.map["desx"]+1, p.map['desy']):
+                    p.map["desx"] = p.map["desx"] + 3
+                    p.map['desmove'].append(tetris.KEY_LEFT)
+                    p.map['desmove'].append(tetris.KEY_LEFT)
+                    p.map['desmove'].append(tetris.KEY_LEFT)
+                    rlist.append(p)
+                    continue
+            elif self.omegamino.hitcheck(self.field, p.map['desy'], p.map["desx"]+2, self.omegamino.minotype[0], p.map["desang"]):
+                if self.drop_judge(self.field, self.omegamino.minotype[0], p.map["desang"], p.map["desx"]+2, p.map['desy']):
+                    p.map["desx"] = p.map["desx"] + 4
+                    p.map['desmove'].append(tetris.KEY_LEFT)
+                    p.map['desmove'].append(tetris.KEY_LEFT)
+                    p.map['desmove'].append(tetris.KEY_LEFT)
+                    p.map['desmove'].append(tetris.KEY_LEFT)
+                    rlist.append(p)
+                    continue
             elif self.omegamino.hitcheck(self.field, p.map['desy'], p.map["desx"]-1, self.omegamino.minotype[0], p.map["desang"]):
                 if self.drop_judge(self.field, self.omegamino.minotype[0], p.map["desang"], p.map["desx"]-1, p.map['desy']):
                     p.map["desx"] = p.map["desx"] - 1
@@ -287,6 +318,23 @@ class Omegaplayer:
                     p.map['desmove'].append(tetris.KEY_RIGHT)
                     rlist.append(p)
                     continue
+            elif self.omegamino.hitcheck(self.field, p.map['desy'], p.map["desx"]-1, self.omegamino.minotype[0], p.map["desang"]):
+                if self.drop_judge(self.field, self.omegamino.minotype[0], p.map["desang"], p.map["desx"]-1, p.map['desy']):
+                    p.map["desx"] = p.map["desx"] - 3
+                    p.map['desmove'].append(tetris.KEY_RIGHT)
+                    p.map['desmove'].append(tetris.KEY_RIGHT)
+                    p.map['desmove'].append(tetris.KEY_RIGHT)
+                    rlist.append(p)
+                    continue
+            elif self.omegamino.hitcheck(self.field, p.map['desy'], p.map["desx"]-2, self.omegamino.minotype[0], p.map["desang"]):
+                if self.drop_judge(self.field, self.omegamino.minotype[0], p.map["desang"], p.map["desx"]-2, p.map['desy']):
+                    p.map["desx"] = p.map["desx"] - 4
+                    p.map['desmove'].append(tetris.KEY_RIGHT)
+                    p.map['desmove'].append(tetris.KEY_RIGHT)
+                    p.map['desmove'].append(tetris.KEY_RIGHT)
+                    p.map['desmove'].append(tetris.KEY_RIGHT)
+                    rlist.append(p)
+                    continue 
             else:
                 continue
 
@@ -361,7 +409,7 @@ class Omegaplayer:
         if curang==fmino.map['desang'] and curx==fmino.map['desx'] and cury==fmino.map['desy'] and not len(fmino.map['desmove'])==0:
             print("d;alfjksd;lkfajsd")
             key = fmino.map['desmove'].pop(0)
-            if key ==tetris.KEY_LEFT:
+            if key=tetris.KEY_LEFT:
                 self.posminolist[0].map['desx'] = self.posminolist[0].map['desx'] - 1
             elif key ==tetris.KEY_RIGHT:
                 self.posminolist[0].map['desx'] = self.posminolist[0].map['desx'] + 1
